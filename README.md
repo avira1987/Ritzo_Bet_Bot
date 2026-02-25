@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## بنر و اپلیکیشن
 
 - تصویر بنر را در `assets/banner.png` قرار دهید. در صورت نبود، پیام بدون تصویر ارسال می‌شود.
-- فایل APK را در یکی از این مسیرها قرار دهید: `RitzoBet.apk` (ریشه پروژه) یا `assets/RitzoBet.apk`. با کلیک روی دکمه Download App، فایل مستقیماً ارسال می‌شود.
+- فایل APK را در `RitzoBet.apk` (ریشه) یا `assets/RitzoBet.apk` قرار دهید. **محدودیت تلگرام: ۵۰ مگابایت.** اگر APK بزرگ‌تر است، در `config.json` مقدار `download_apk.url` را به لینک مستقیم تنظیم کنید (مثلاً با اجرای `serve_apk.py` روی سرور: `http://IP:8080/RitzoBet.apk`).
 
 ## اجرا
 

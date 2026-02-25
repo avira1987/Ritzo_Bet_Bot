@@ -31,6 +31,10 @@ LAST_POST_PATH = BASE_DIR / "data" / "last_post.json"
 BANNER_PATH = BASE_DIR / "assets" / "banner.png"
 
 # APK: check project root first, then assets/
+# Telegram Bot API limit: 50MB for send_document
+APK_SIZE_LIMIT = 50 * 1024 * 1024  # 50 MB
+
+
 def _find_apk_path() -> Path:
     for p in (BASE_DIR / "RitzoBet.apk", BASE_DIR / "RitzoBet .apk", BASE_DIR / "assets" / "RitzoBet.apk"):
         if p.exists():
@@ -40,6 +44,12 @@ def _find_apk_path() -> Path:
 
 def get_apk_path() -> Path:
     return _find_apk_path()
+
+
+def can_send_apk_direct() -> bool:
+    """True if APK exists and is under 50MB (Telegram limit)."""
+    p = get_apk_path()
+    return p.exists() and p.stat().st_size <= APK_SIZE_LIMIT
 LOG_PATH = BASE_DIR / "bot.log"
 
 # Logging setup: console + file, English messages
@@ -158,16 +168,18 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
     flags = config.get("flags", {})
     apk = config.get("download_apk", {"text": "📱 Download App", "url": ""})
 
-    # Download button: use URL if set; if file exists use callback; else use fallback URL
+    # Download button: use URL if set; if file exists and <=50MB use callback; else use URL
+    # Telegram limit: 50MB for send_document - larger files must use direct link
     apk_url = apk.get("url", "").strip()
-    apk_file_exists = get_apk_path().exists()
+    apk_sendable = can_send_apk_direct()
     if apk_url and apk_url.startswith("http"):
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
-    elif apk_file_exists:
+    elif apk_sendable:
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
     else:
-        # No file and no URL: use fallback link to channel
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url="https://t.me/RitzoBet")
+        # File too large (>50MB), missing, or no direct send: use config URL or channel link
+        fallback = apk_url if apk_url.startswith("http") else "https://t.me/RitzoBet"
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=fallback)
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
@@ -270,17 +282,17 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     if query.data != "send_apk":
         return
     apk_path = get_apk_path()
+    config = load_config()
+    apk_config_url = config.get("download_apk", {}).get("url", "").strip()
+    fallback_url = apk_config_url if apk_config_url.startswith("http") else "https://t.me/RitzoBet"
+
     if not apk_path.exists():
         log.warning("APK download requested but file not found: %s", apk_path)
-        apk_url = load_config().get("download_apk", {}).get("url", "").strip()
-        if apk_url and apk_url.startswith("http"):
-            await query.message.reply_text(
-                "📱 Download the app:\n" + apk_url,
-            )
-        else:
-            await query.message.reply_text(
-                "⚠️ App is temporarily unavailable. Please try again later or visit T.me/RitzoBet",
-            )
+        await query.message.reply_text(f"📱 Download the app:\n{fallback_url}")
+        return
+    if apk_path.stat().st_size > APK_SIZE_LIMIT:
+        log.warning("APK too large (%s MB): %s", apk_path.stat().st_size // (1024 * 1024), apk_path)
+        await query.message.reply_text(f"📱 App is large. Download from:\n{fallback_url}")
         return
     try:
         await query.message.reply_document(
@@ -290,7 +302,7 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         log.info("APK sent to user_id=%s", user_id)
     except Exception as e:
         log.exception("Failed to send APK to user_id=%s: %s", user_id, e)
-        await query.message.reply_text("❌ Failed to send file. Please try again or visit T.me/RitzoBet")
+        await query.message.reply_text(f"📱 Download the app:\n{fallback_url}")
 
 
 async def channel_post_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
