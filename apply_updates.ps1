@@ -22,6 +22,14 @@ if (Test-Path "$Source\assets") {
     Copy-Item "$Source\assets\*" "$Dest\assets\" -Force -Recurse
     Write-Host "  assets/ copied (banner.png, etc.)" -ForegroundColor Green
 }
+# Copy APK from root if exists
+foreach ($apk in @("$Source\RitzoBet.apk", "$Source\RitzoBet .apk")) {
+    if (Test-Path $apk) {
+        Copy-Item $apk "$Dest\" -Force
+        Write-Host "  APK copied from root" -ForegroundColor Green
+        break
+    }
+}
 
 # Copy data
 if (Test-Path "$Source\data") {

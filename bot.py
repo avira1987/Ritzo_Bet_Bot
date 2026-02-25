@@ -29,7 +29,17 @@ CONFIG_PATH = BASE_DIR / "config.json"
 USERS_PATH = BASE_DIR / "data" / "users.json"
 LAST_POST_PATH = BASE_DIR / "data" / "last_post.json"
 BANNER_PATH = BASE_DIR / "assets" / "banner.png"
-APK_PATH = BASE_DIR / "assets" / "RitzoBet.apk"
+
+# APK: check project root first, then assets/
+def _find_apk_path() -> Path:
+    for p in (BASE_DIR / "RitzoBet.apk", BASE_DIR / "RitzoBet .apk", BASE_DIR / "assets" / "RitzoBet.apk"):
+        if p.exists():
+            return p
+    return BASE_DIR / "assets" / "RitzoBet.apk"  # default path
+
+
+def get_apk_path() -> Path:
+    return _find_apk_path()
 LOG_PATH = BASE_DIR / "bot.log"
 
 # Logging setup: console + file, English messages
@@ -150,7 +160,7 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
 
     # Download button: use URL if set; if file exists use callback; else use fallback URL
     apk_url = apk.get("url", "").strip()
-    apk_file_exists = APK_PATH.exists()
+    apk_file_exists = get_apk_path().exists()
     if apk_url and apk_url.startswith("http"):
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
     elif apk_file_exists:
@@ -259,8 +269,9 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     if query.data != "send_apk":
         return
-    if not APK_PATH.exists():
-        log.warning("APK download requested but file not found: %s", APK_PATH)
+    apk_path = get_apk_path()
+    if not apk_path.exists():
+        log.warning("APK download requested but file not found: %s", apk_path)
         apk_url = load_config().get("download_apk", {}).get("url", "").strip()
         if apk_url and apk_url.startswith("http"):
             await query.message.reply_text(
@@ -273,7 +284,7 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         return
     try:
         await query.message.reply_document(
-            document=str(APK_PATH),
+            document=str(apk_path),
             filename="RitzoBet.apk",
         )
         log.info("APK sent to user_id=%s", user_id)
@@ -499,7 +510,7 @@ def main() -> None:
     """Run the bot."""
     setup_logging()
     log.info("RitzoBet bot starting...")
-    log.info("Config: CONFIG_PATH=%s, BANNER=%s, APK=%s", CONFIG_PATH, BANNER_PATH, APK_PATH)
+    log.info("Config: CONFIG_PATH=%s, BANNER=%s, APK=%s", CONFIG_PATH, BANNER_PATH, get_apk_path())
 
     app = Application.builder().token(BOT_TOKEN).build()
 
