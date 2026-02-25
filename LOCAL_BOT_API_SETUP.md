@@ -1,21 +1,30 @@
-# ارسال/دانلود فایل APK (بیش از ۵۰ مگابایت)
+# ارسال مستقیم فایل APK در چت (بیش از ۵۰ مگابایت)
 
-## روش ساده: serve_apk.py (پیشنهادی)
+## روش: Local Bot API Server
 
-بدون نیاز به telegram-bot-api.exe:
+برای ارسال **مستقیم فایل در چت** (کاربر با یک کلیک فایل را در تلگرام دریافت می‌کند):
 
-1. فایل `RitzoBet.apk` را در ریشه پروژه یا `assets/` قرار دهید
-2. همزمان با بات، سرور را اجرا کنید: `python serve_apk.py`
-3. در `config.json` مقدار `download_apk.url` را `http://IP:8080/RitzoBet.apk` قرار دهید
-4. کاربر با کلیک روی دکمه، مستقیماً فایل را دانلود می‌کند
+### ۱. پوشه telegram-bot-api
+فایل اجرایی را در `telegram-bot-api/telegram-bot-api.exe` قرار دهید.
 
-یا از `run_bot_with_apk_server.bat` استفاده کنید که هر دو را اجرا می‌کند.
+### ۲. تنظیم .env
+```
+TELEGRAM_API_ID=شماره_از_my.telegram.org
+TELEGRAM_API_HASH=رشته_از_my.telegram.org
+LOCAL_BOT_API_URL=http://127.0.0.1:8081
+```
 
----
+### ۳. اجرا
+```
+start_with_local_api.bat
+```
+یا:
+```powershell
+.\start_local_bot_api.ps1
+```
 
-## روش پیشرفته: Local Bot API Server
-
-تلگرام برای بات‌ها حداکثر **۵۰ مگابایت** فایل مجاز است. برای **ارسال فایل در چت** (نه لینک)، باید از **Local Bot API Server** استفاده کنید.
+### ۴. فایل APK
+فایل `RitzoBet.apk` را در ریشه پروژه یا `assets/` قرار دهید.
 
 ## مراحل نصب (ویندوز)
 
