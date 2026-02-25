@@ -9,4 +9,5 @@ ritzobet-bot-deploy.zip
 assets/RitzoBet.apk
 RitzoBet.apk
 RitzoBet .apk
-telegram-bot-api/
+telegram-bot-api/*.exe
+telegram-bot-api/*.dll

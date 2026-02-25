@@ -4,8 +4,27 @@
 
 برای ارسال **مستقیم فایل در چت** (کاربر با یک کلیک فایل را در تلگرام دریافت می‌کند):
 
-### ۱. پوشه telegram-bot-api
-فایل اجرایی را در `telegram-bot-api/telegram-bot-api.exe` قرار دهید.
+### ۱. دانلود فایل اجرایی (telegram-bot-api.exe)
+
+**توجه:** مخزن رسمی (tdlib/telegram-bot-api) فقط کد C++ دارد و فایل .exe ارائه نمی‌دهد.
+
+**روش آسان – اسکریپت دانلود:**
+```powershell
+.\download_telegram_bot_api.ps1
+```
+
+**روش دستی:**
+- https://github.com/std-microblock/tg-botapi-build/releases  
+  → آخرین release → دانلود `botapi-*.zip` → استخراج و قرار دادن `telegram-bot-api.exe` در پوشه `telegram-bot-api/`
+
+**ساخت از سورس C++:** https://tdlib.github.io/telegram-bot-api/build.html?os=Windows
+
+ساختار پوشه:
+```
+telegram-bot-api/
+├── telegram-bot-api.exe
+└── (در صورت نیاز: libcrypto, libssl, zlib - معمولاً همراه exe)
+```
 
 ### ۲. تنظیم .env
 ```
