@@ -207,7 +207,7 @@ def admin_only(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id if update.effective_user else 0
         if user_id not in get_admin_ids():
-            await update.message.reply_text("⛔ دسترسی غیرمجاز.")
+            await update.message.reply_text("⛔ Access denied.")
             return
         return await func(update, context)
 
@@ -257,7 +257,15 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         return
     if not APK_PATH.exists():
         log.warning("APK download requested but file not found: %s", APK_PATH)
-        await query.message.reply_text("⚠️ فایل اپلیکیشن در حال حاضر موجود نیست.")
+        apk_url = load_config().get("download_apk", {}).get("url", "").strip()
+        if apk_url and apk_url.startswith("http"):
+            await query.message.reply_text(
+                "📱 Download the app:\n" + apk_url,
+            )
+        else:
+            await query.message.reply_text(
+                "⚠️ App is temporarily unavailable. Please try again later or visit T.me/RitzoBet",
+            )
         return
     try:
         await query.message.reply_document(
@@ -267,7 +275,7 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         log.info("APK sent to user_id=%s", user_id)
     except Exception as e:
         log.exception("Failed to send APK to user_id=%s: %s", user_id, e)
-        await query.message.reply_text(f"❌ خطا در ارسال فایل: {e}")
+        await query.message.reply_text("❌ Failed to send file. Please try again or visit T.me/RitzoBet")
 
 
 async def channel_post_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -311,7 +319,7 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_id = update.effective_user.id if update.effective_user else 0
     if user_id not in get_admin_ids():
         log.warning("Unauthorized broadcast attempt by user_id=%s", user_id)
-        await update.message.reply_text("⛔ دسترسی غیرمجاز.")
+        await update.message.reply_text("⛔ Access denied.")
         return
     broadcast_mode_users.add(user_id)
     log.info("Admin user_id=%s entered broadcast mode", user_id)
@@ -365,7 +373,7 @@ async def admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     user_id = update.effective_user.id if update.effective_user else 0
     if user_id not in get_admin_ids():
         log.warning("Unauthorized /admin attempt by user_id=%s", user_id)
-        await update.message.reply_text("⛔ دسترسی غیرمجاز.")
+        await update.message.reply_text("⛔ Access denied.")
         return
     log.info("Admin panel opened by user_id=%s", user_id)
 
@@ -397,7 +405,7 @@ async def admin_callback_handler(update: Update, context: ContextTypes.DEFAULT_T
 
     user_id = update.effective_user.id if update.effective_user else 0
     if user_id not in get_admin_ids():
-        await query.edit_message_text("⛔ دسترسی غیرمجاز.")
+        await query.edit_message_text("⛔ Access denied.")
         return
 
     data = query.data
