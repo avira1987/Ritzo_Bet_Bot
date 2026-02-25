@@ -72,10 +72,11 @@ CHANNEL_USERNAME = "ritzobet"
 # ادمین‌هایی که در حالت ارسال همگانی هستند
 broadcast_mode_users: set[int] = set()
 
-START_CAPTION = """⚽️ 🏀 Sport Games
-24/7 Online Support 💬
-Fast Deposits & Withdrawals 💸
-Live Betting Options ✅ Exclusive Promotions 🎁 User-Friendly Interface 📱"""
+START_CAPTION = """RitzoBet Official Bot ✅
+100% Deposit Bonus 🔥
+100% Every Sunday Bonus On Ritzobet 🚀
+
+✅ T.me/RitzoBet"""
 
 
 def load_config() -> dict:
@@ -156,6 +157,7 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
+        [apk_button],
         [
             InlineKeyboardButton(
                 flags.get("england", {}).get("text", "🇬🇧"),
@@ -176,7 +178,6 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
                 url=flags.get("bangladesh", {}).get("url", "https://t.me/RitzoBet"),
             ),
         ],
-        [apk_button],
     ]
     return InlineKeyboardMarkup(keyboard)
 
