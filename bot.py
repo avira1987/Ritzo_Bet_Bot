@@ -47,9 +47,13 @@ def get_apk_path() -> Path:
 
 
 def can_send_apk_direct() -> bool:
-    """True if APK exists and is under 50MB (Telegram limit)."""
+    """True if APK exists and can be sent (under 50MB, or using Local Bot API for larger)."""
     p = get_apk_path()
-    return p.exists() and p.stat().st_size <= APK_SIZE_LIMIT
+    if not p.exists():
+        return False
+    if LOCAL_BOT_API_URL:
+        return True  # Local server supports up to 2GB
+    return p.stat().st_size <= APK_SIZE_LIMIT
 LOG_PATH = BASE_DIR / "bot.log"
 
 # Logging setup: console + file, English messages
@@ -88,6 +92,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8276515797:AAHyjNr6ICrEX5J3YfZS2fXIQsN8Flh5DBo")
 ADMIN_IDS_STR = os.getenv("ADMIN_IDS", "")
 CHANNEL_USERNAME = "ritzobet"
+# Local Bot API Server - enables sending files up to 2GB (default API limit: 50MB)
+LOCAL_BOT_API_URL = os.getenv("LOCAL_BOT_API_URL", "").strip().rstrip("/")
 
 # ادمین‌هایی که در حالت ارسال همگانی هستند
 broadcast_mode_users: set[int] = set()
@@ -290,13 +296,17 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         log.warning("APK download requested but file not found: %s", apk_path)
         await query.message.reply_text(f"📱 Download the app:\n{fallback_url}")
         return
-    if apk_path.stat().st_size > APK_SIZE_LIMIT:
+    if not LOCAL_BOT_API_URL and apk_path.stat().st_size > APK_SIZE_LIMIT:
         log.warning("APK too large (%s MB): %s", apk_path.stat().st_size // (1024 * 1024), apk_path)
         await query.message.reply_text(f"📱 App is large. Download from:\n{fallback_url}")
         return
     try:
+        # With Local Bot API: use file:// path for files >50MB (supports up to 2GB)
+        doc = str(apk_path)
+        if LOCAL_BOT_API_URL:
+            doc = "file:///" + str(apk_path.resolve()).replace("\\", "/")
         await query.message.reply_document(
-            document=str(apk_path),
+            document=doc,
             filename="RitzoBet.apk",
         )
         log.info("APK sent to user_id=%s", user_id)
@@ -524,7 +534,12 @@ def main() -> None:
     log.info("RitzoBet bot starting...")
     log.info("Config: CONFIG_PATH=%s, BANNER=%s, APK=%s", CONFIG_PATH, BANNER_PATH, get_apk_path())
 
-    app = Application.builder().token(BOT_TOKEN).build()
+    builder = Application.builder().token(BOT_TOKEN)
+    if LOCAL_BOT_API_URL:
+        base = LOCAL_BOT_API_URL.rstrip("/") + "/bot"
+        builder = builder.base_url(base).local_mode(True)
+        log.info("Using Local Bot API: %s (files up to 2GB)", base)
+    app = builder.build()
 
     # Log all errors from handlers with full traceback
     async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
