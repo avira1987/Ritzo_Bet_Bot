@@ -174,18 +174,17 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
     flags = config.get("flags", {})
     apk = config.get("download_apk", {"text": "📱 Download App", "url": ""})
 
-    # Download button: use URL if set; if file exists and <=50MB use callback; else use URL
-    # Telegram limit: 50MB for send_document - larger files must use direct link
+    # Download button: ALWAYS prefer sending file when possible; URL only as fallback
     apk_url = apk.get("url", "").strip()
     apk_sendable = can_send_apk_direct()
-    if apk_url and apk_url.startswith("http"):
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
-    elif apk_sendable:
+    if apk_sendable:
+        # Send file directly in chat (callback)
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
+    elif apk_url and apk_url.startswith("http"):
+        # Fallback: link (serve_apk or channel)
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
     else:
-        # File too large (>50MB), missing, or no direct send: use config URL or channel link
-        fallback = apk_url if apk_url.startswith("http") else "https://t.me/RitzoBet"
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=fallback)
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url="https://t.me/RitzoBet")
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
