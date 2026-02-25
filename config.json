@@ -1,0 +1,29 @@
+{
+  "claim_gift": {
+    "text": "🎁 Claim Gift !",
+    "url": "http://t.me/Ritzo_Bet_Bot/httpsfo6br0ovlolltagd_277"
+  },
+  "flags": {
+    "england": {
+      "text": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      "url": "https://t.me/RitzoBet"
+    },
+    "turkey": {
+      "text": "🇹🇷",
+      "url": "https://t.me/RitzoBetResmi"
+    },
+    "uzbekistan": {
+      "text": "🇺🇿",
+      "url": "https://t.me/RitzoBet_uzb"
+    },
+    "bangladesh": {
+      "text": "🇧🇩",
+      "url": "https://t.me/RitzoBet_BD"
+    }
+  },
+  "download_apk": {
+    "text": "📱 Download App",
+    "url": ""
+  },
+  "admin_ids": [109374387, 332935318]
+}

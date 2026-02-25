@@ -1,0 +1,14 @@
+[Unit]
+Description=RitzoBet Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ritzobet-bot
+ExecStart=/opt/ritzobet-bot/venv/bin/python /opt/ritzobet-bot/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
