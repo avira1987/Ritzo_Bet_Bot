@@ -148,12 +148,16 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
     flags = config.get("flags", {})
     apk = config.get("download_apk", {"text": "📱 Download App", "url": ""})
 
-    # Download button: use URL if set, otherwise callback to send file
+    # Download button: use URL if set; if file exists use callback; else use fallback URL
     apk_url = apk.get("url", "").strip()
+    apk_file_exists = APK_PATH.exists()
     if apk_url and apk_url.startswith("http"):
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
-    else:
+    elif apk_file_exists:
         apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
+    else:
+        # No file and no URL: use fallback link to channel
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url="https://t.me/RitzoBet")
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
