@@ -37,12 +37,16 @@ if (Test-Path "$Source\data") {
     Copy-Item "$Source\data\*" "$Dest\data\" -Force -Recurse
 }
 
-# Stop old bot
+# Stop old processes
 taskkill /F /IM python.exe 2>$null
 Start-Sleep -Seconds 2
 
-# Start bot
+# Start APK server (for direct download, no 50MB limit)
 Set-Location $Dest
+Start-Process python -ArgumentList "serve_apk.py" -WindowStyle Hidden -RedirectStandardOutput "serve_apk.log" -RedirectStandardError "serve_apk.log"
+Start-Sleep -Seconds 1
+
+# Start bot
 Start-Process python -ArgumentList "bot.py" -WindowStyle Hidden -RedirectStandardOutput "bot.log" -RedirectStandardError "bot.log"
 
 Write-Host "Bot restarted. Check: Get-Content $Dest\bot.log -Tail 20" -ForegroundColor Green
