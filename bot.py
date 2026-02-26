@@ -174,17 +174,8 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
     flags = config.get("flags", {})
     apk = config.get("download_apk", {"text": "📱 Download App", "url": ""})
 
-    # Download button: ALWAYS prefer sending file when possible; URL only as fallback
-    apk_url = apk.get("url", "").strip()
-    apk_sendable = can_send_apk_direct()
-    if apk_sendable:
-        # Send file directly in chat (callback)
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
-    elif apk_url and apk_url.startswith("http"):
-        # Fallback: link (serve_apk or channel)
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
-    else:
-        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url="https://t.me/RitzoBet")
+    # Download button: ALWAYS use callback to send file in chat (never URL/link)
+    apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
@@ -287,17 +278,14 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     if query.data != "send_apk":
         return
     apk_path = get_apk_path()
-    config = load_config()
-    apk_config_url = config.get("download_apk", {}).get("url", "").strip()
-    fallback_url = apk_config_url if apk_config_url.startswith("http") else "https://t.me/RitzoBet"
 
     if not apk_path.exists():
         log.warning("APK download requested but file not found: %s", apk_path)
-        await query.message.reply_text(f"📱 Download the app:\n{fallback_url}")
+        await query.message.reply_text("⚠️ App is temporarily unavailable. Please try again later.")
         return
     if not LOCAL_BOT_API_URL and apk_path.stat().st_size > APK_SIZE_LIMIT:
         log.warning("APK too large (%s MB): %s", apk_path.stat().st_size // (1024 * 1024), apk_path)
-        await query.message.reply_text(f"📱 App is large. Download from:\n{fallback_url}")
+        await query.message.reply_text("⚠️ App is temporarily unavailable. Please try again later.")
         return
     try:
         # With Local Bot API: use file:// path for files >50MB (supports up to 2GB)
@@ -311,7 +299,7 @@ async def download_apk_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         log.info("APK sent to user_id=%s", user_id)
     except Exception as e:
         log.exception("Failed to send APK to user_id=%s: %s", user_id, e)
-        await query.message.reply_text(f"📱 Download the app:\n{fallback_url}")
+        await query.message.reply_text("⚠️ Failed to send file. Please try again later.")
 
 
 async def channel_post_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
