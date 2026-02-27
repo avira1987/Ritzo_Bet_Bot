@@ -174,8 +174,12 @@ def build_start_keyboard() -> InlineKeyboardMarkup:
     flags = config.get("flags", {})
     apk = config.get("download_apk", {"text": "📱 Download App", "url": ""})
 
-    # Download button: ALWAYS use callback to send file in chat (never URL/link)
-    apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
+    # Download button: link to channel post for APK download
+    apk_url = apk.get("url", "").strip() or "https://t.me/RitzoBet/922"
+    if apk_url.startswith("http"):
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), url=apk_url)
+    else:
+        apk_button = InlineKeyboardButton(apk.get("text", "📱 Download App"), callback_data="send_apk")
 
     keyboard = [
         [InlineKeyboardButton(cg["text"], url=cg["url"])],
